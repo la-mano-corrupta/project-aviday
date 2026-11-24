@@ -1,0 +1,17 @@
+{
+  "title": "Marcus Aurelius Morning Mental Armor",
+  "style": "dark-academia-monograph",
+  "northStar": "Expecting difficult people in advance keeps your calm unshakeable.",
+  "cover": {
+    "headline": "INNER ARMOR",
+    "sublabel": "Marcus Aurelius · Meditations II.1"
+  },
+  "citation": "Marcus Aurelius · Meditations II.1",
+  "durationSec": 28,
+  "lines": [
+    { "start": 0.2, "end": 3.2, "mode": "metaphor", "label": "MORNING MENTAL ARMOR", "caps": "*STOP | EXPECTING *PERFECTION" },
+    { "start": 3.4, "end": 10.5, "mode": "diagram", "label": "MEDITATIONS II.1", "caps": "YOU WILL *MEET | DIFFICULT *PEOPLE" },
+    { "start": 10.7, "end": 19.0, "mode": "chart", "label": "NOT ANGER — CLARITY", "caps": "THEY ACT FROM *IGNORANCE | NOT *MALICE" },
+    { "start": 19.2, "end": 27.5, "mode": "metaphor", "label": "OWN YOUR RESPONSE", "caps": "PROTECT YOUR *PEACE | EVERY *MORNING" }
+  ]
+}

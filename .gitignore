@@ -1,0 +1,56 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+*.pem
+*.key
+
+# Credentials & Live Browser/API Sessions
+ig_session.json
+youtube_credentials.json
+client_secret*.json
+credentials.json
+token.json
+.chrome-profile/
+
+# Scraped Inbox Artifacts & KV Exports
+direct_inbox*.html
+bundle_*.js
+cloudflare_kv_export/
+kv_dump*.json
+
+# Generated Media, Staging & Logs
+cdn_media/
+renders/
+review/
+*.mp4
+*.mov
+*.wav
+*.mp3
+!skills/rea-video/docs/**/*.mp4
+!skills/rea-video/docs/**/*.wav
+*.log
+*.err
+reel_queue_daemon.log
+reel_queue_daemon.err
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+
+# Node / Wrangler / Build
+node_modules/
+.wrangler/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db

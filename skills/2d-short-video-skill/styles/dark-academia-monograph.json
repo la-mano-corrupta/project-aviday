@@ -1,0 +1,36 @@
+{
+  "id": "dark-academia-monograph",
+  "name": "Dark Academia Monograph (Nocturnal Stoic & Schopenhauer)",
+  "inspiration": ["Einzelganger", "Eternalised", "Academy of Ideas"],
+  "palette": {
+    "bg": "#0E0F12",
+    "bgDark": "#08090B",
+    "ink": "#F2EAD8",
+    "inkMuted": "#9C9484",
+    "accent": "#D4A853",
+    "accentAlt": "#9E3B33",
+    "captionFill": "#F2EAD8",
+    "captionHighlight": "#D4A853",
+    "captionStroke": "#08090B"
+  },
+  "typography": {
+    "displayFont": "Georgia",
+    "bodyFont": "Inter",
+    "captionWeight": 900,
+    "captionSize": 102,
+    "hookSize": 68,
+    "citationSize": 30
+  },
+  "motion": {
+    "wobbleAmplitude": 0.4,
+    "boilFps": 12,
+    "cutResetSec": 2.4,
+    "strokeWidth": 4.0,
+    "negativeSpaceMin": 0.6
+  },
+  "audio": {
+    "droneRootHz": 98,
+    "chordStyle": "warm-ambient",
+    "preferredVoices": ["bm_george", "am_onyx", "en-US-ChristopherNeural"]
+  }
+}

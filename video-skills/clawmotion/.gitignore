@@ -1,0 +1,12 @@
+node_modules
+dist
+*.mp4
+*.png
+.DS_Store
+debug.log
+test.wav
+temp_*.wav
+textify.yaml
+codebase.txt
+CHATGPT_MESSAGE.md
+.claw-temp-entry.ts

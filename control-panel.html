@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aviday — Multi-Key Proactive Load-Balanced AI Control Center</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; background: #0b0f19; color: #f1f5f9; padding: 20px; }
+    .container { max-width: 1080px; margin: 0 auto; display: grid; gap: 16px; }
+    .card { background: #151c2c; border: 1px solid #26324d; border-radius: 14px; padding: 18px; }
+    h1 { margin: 0 0 6px; font-size: 21px; color: #fff; }
+    h2 { margin: 0 0 8px; font-size: 16.5px; color: #60a5fa; }
+    p { margin: 4px 0 10px; color: #94a3b8; font-size: 13px; line-height: 1.45; }
+    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #cbd5e1; }
+    input, select, textarea {
+      width: 100%; padding: 8px 11px; border-radius: 8px; border: 1px solid #334155;
+      background: #0f172a; color: #f8fafc; font-size: 12.5px; margin-bottom: 8px;
+    }
+    button {
+      background: #2563eb; color: #fff; border: none; padding: 10px 15px;
+      border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;
+    }
+    button:hover { background: #1d4ed8; }
+    button.green { background: #059669; }
+    button.green:hover { background: #047857; }
+    button.red { background: #dc2626; }
+    button.small { padding: 5px 9px; font-size: 11.5px; margin-right: 5px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; margin-right: 5px; margin-bottom: 4px; }
+    .ok { background: #065f46; color: #6ee7b7; }
+    .gold { background: #78350f; color: #fde68a; }
+    .key-pill { background: #1e293b; border: 1px solid #334155; color: #93c5fd; font-family: monospace; }
+    .live { background: #dc2626; color: #fff; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .user-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 11px; background: #0f172a; border: 1px solid #26324d; border-radius: 8px; margin-bottom: 7px;
+    }
+    .chat-log {
+      height: 350px; overflow-y: auto; background: #090d16; border: 1px solid #26324d;
+      border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 9px;
+    }
+    .bubble { padding: 9px 13px; border-radius: 10px; max-width: 88%; font-size: 13px; line-height: 1.4; }
+    .bubble.user { background: #2563eb; align-self: flex-end; }
+    .bubble.bot { background: #1e293b; border: 1px solid #334155; align-self: flex-start; }
+    .bubble.alert { background: #7f1d1d; border: 1px solid #ef4444; align-self: center; font-size: 12px; }
+    .role-tag { font-size: 11px; opacity: 0.8; margin-bottom: 3px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>✨ <span id="headerTitle">Aviday — Multi-Key Anti-Wall Load Balancer</span></h1>
+      <div style="margin-top:8px;">
+        <span id="metaBadge" class="badge gold">Page: Configure below</span>
+        <span id="igBadge" class="badge gold">IG: Configure below</span>
+        <span class="badge gold">❤️ VIP Mode: Always Freshest Key + Most Powerful Model</span>
+        <span id="liveBadge" class="badge" style="background:#334155;color:#cbd5e1;">⏸️ Auto-Reply: Paused</span>
+      </div>
+      <div id="keyLoadBar" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Step 0: Persona & Meta Graph API Credentials (Stored Locally in Your Browser)</h2>
+      <div class="grid-2" style="gap:10px;">
+        <div>
+          <label>🔑 META_PAGE_ACCESS_TOKEN (optional for local simulator):</label>
+          <input id="metaTokenInput" type="password" placeholder="Paste your Meta Page Access Token..." oninput="saveConfig()" />
+        </div>
+        <div>
+          <label>🆔 IG_BUSINESS_ACCOUNT_ID:</label>
+          <input id="igBusinessIdInput" type="text" placeholder="e.g. 17841..." oninput="saveConfig()" />
+        </div>
+      </div>
+      <div class="grid-2" style="gap:10px;">
+        <div>
+          <label>📸 Instagram @username:</label>
+          <input id="igUsernameInput" type="text" placeholder="e.g. your_ig_handle" oninput="saveConfig()" />
+        </div>
+        <div>
+          <label>👤 Owner Name / Agent Name / VIP Name (comma-free or separate):</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <input id="ownerNameInput" type="text" placeholder="Owner (e.g. Alex)" oninput="saveConfig()" />
+            <input id="agentNameInput" type="text" placeholder="Agent (Aviday)" oninput="saveConfig()" />
+            <input id="vipNameInput" type="text" placeholder="VIP Name" oninput="saveConfig()" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Step 1: Your Gemini API Keys (Up to 7 Rotating Keys)</h2>
+        <p>Every message automatically jumps to the next freshest key (Key #1 ➔ Key #2 ➔ ...) so <strong>no key ever hits 5 messages/min</strong>:</p>
+        <div class="key-grid">
+          <div>
+            <label>🔑 API Key #1:</label>
+            <input id="key1" type="password" placeholder="AIzaSy..." oninput="saveConfig()" />
+          </div>
+          <div>
+            <label>🔑 API Key #2:</label>
+            <input id="key2" type="password" placeholder="AIzaSy... (optional)" oninput="saveConfig()" />
+          </div>
+          <div>
+            <label>🔑 API Key #3:</label>
+            <input id="key3" type="password" placeholder="AIzaSy... (optional)" oninput="saveConfig()" />
+          </div>
+          <div>
+            <label>🔑 API Key #4:</label>
+            <input id="key4" type="password" placeholder="AIzaSy... (optional)" oninput="saveConfig()" />
+          </div>
+          <div>
+            <label>🔑 API Key #5:</label>
+            <input id="key5" type="password" placeholder="AIzaSy... (optional)" oninput="saveConfig()" />
+          </div>
+          <div>
+            <label>🔑 API Key #6:</label>
+            <input id="key6" type="password" placeholder="AIzaSy... (optional)" oninput="saveConfig()" />
+          </div>
+        </div>
+        <label>🔑 API Key #7:</label>
+        <input id="key7" type="password" placeholder="AIzaSy... (optional)" oninput="saveConfig()" />
+        <div style="margin-top:6px;">
+          <button id="toggleLiveBtn" class="green" onclick="toggleLiveBot()">🟢 Start Live Instagram DM Auto-Reply</button>
+        </div>
+        <p id="liveStatusText" style="margin-top:8px;font-size:12.5px;color:#6ee7b7;"></p>
+      </div>
+
+      <div class="card">
+        <h2>Step 2: Set Your 2 Admin Accounts + Tier 1 VIP</h2>
+        <p>Enter the Instagram <strong>@username</strong> (or click Scan Inbox below to pick them with 1 click):</p>
+        <div class="grid-2" style="gap:10px;">
+          <div>
+            <label>🛠️ Admin 1 (@username):</label>
+            <input id="admin1Username" type="text" placeholder="e.g. main_admin" oninput="saveConfig()" />
+          </div>
+          <div>
+            <label>🛠️ Admin 2 (@username):</label>
+            <input id="admin2Username" type="text" placeholder="e.g. backup_admin" oninput="saveConfig()" />
+          </div>
+        </div>
+        <label>❤️ Tier 1 VIP Account (@username — Highest Priority & Most Powerful Model):</label>
+        <input id="lomlUsername" type="text" placeholder="e.g. vip_username" oninput="saveConfig()" />
+        <button onclick="scanInstagramInbox()">🔍 Scan Instagram DM Inbox to Pick Accounts</button>
+        <div id="inboxList" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Step 3: Multi-Friend Simultaneous Chat Tester & Live Feed</h2>
+      <p>Click <strong>"⚡ Test 5 Friends Texting Simultaneously"</strong> and watch the tags show <code>Key #1</code>, <code>Key #2</code>, etc. — spreading every single message across your configured keys automatically!</p>
+      <div class="grid-2">
+        <div>
+          <label>Send Message As:</label>
+          <select id="simRole">
+            <option value="loml">❤️ Tier 1: VIP Contact (Freshest Key + Most Powerful Model)</option>
+            <option value="admin1">🛠️ Tier 2: Owner (Admin 1)</option>
+            <option value="admin2">🛠️ Tier 2: Owner (Admin 2)</option>
+            <option value="friend_1">🌍 Friend 1 (@friend_1)</option>
+            <option value="friend_2">🌍 Friend 2 (@friend_2)</option>
+            <option value="friend_3">🌍 Friend 3 (@friend_3)</option>
+            <option value="friend_4">🌍 Friend 4 (@friend_4)</option>
+            <option value="friend_5">🌍 Friend 5 (@friend_5)</option>
+          </select>
+          <label>Message:</label>
+          <textarea id="simText" rows="3" placeholder="Chat with your agent! Every message switches to the next key automatically so no key ever hits the 5-msg wall!"></textarea>
+          <div style="display:flex;gap:8px;">
+            <button onclick="sendTestDM()">🚀 Send DM</button>
+            <button style="background:#475569;" onclick="fireSimultaneous5FriendsTest()">⚡ Test 5 Friends Texting Simultaneously</button>
+          </div>
+        </div>
+        <div>
+          <label>Live Instagram DM & Agent Reply Feed:</label>
+          <div id="chatLog" class="chat-log"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BUILTIN_7_KEYS = ['', '', '', '', '', '', ''];
+    const STORAGE_KEY = 'ig_agent_state_v1';
+
+    const state = JSON.parse(localStorage.getItem(STORAGE_KEY) || JSON.stringify({
+      metaToken: '',
+      igBusinessId: '',
+      igUsername: '',
+      ownerName: 'Owner',
+      agentName: 'Aviday',
+      vipName: 'VIP',
+      keys: [...BUILTIN_7_KEYS],
+      roundRobinIdx: 0,
+      admin1Username: '',
+      admin1IgId: '',
+      admin2Username: '',
+      admin2IgId: '',
+      lomlUsername: '',
+      lomlIgId: '',
+      statusMode: 'online',
+      statusMessage: 'Online and hanging out',
+      availableAt: null,
+      extraNotes: '',
+      lastLomlAlertAt: 0,
+      repliedMessageIds: {},
+      userMemories: {},
+      chatHistories: {}
+    }));
+
+    if (!Array.isArray(state.keys) || state.keys.length < 7) {
+      state.keys = [...BUILTIN_7_KEYS];
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    function getMetaToken() {
+      return (state.metaToken || '').trim();
+    }
+    function getIgBusinessId() {
+      return (state.igBusinessId || '').trim();
+    }
+    function getIgUsername() {
+      return (state.igUsername || 'your_account').trim().replace(/^@/, '');
+    }
+    function getOwnerName() {
+      return (state.ownerName || 'Owner').trim();
+    }
+    function getAgentName() {
+      return (state.agentName || 'Aviday').trim();
+    }
+    function getVipName() {
+      return (state.vipName || 'VIP').trim();
+    }
+
+    function updateBadges() {
+      const hasMeta = Boolean(getMetaToken());
+      const igId = getIgBusinessId();
+      const igHandle = state.igUsername ? '@' + getIgUsername() : 'Configure below';
+      const metaBadge = document.getElementById('metaBadge');
+      const igBadge = document.getElementById('igBadge');
+      metaBadge.textContent = hasMeta ? '✅ Meta Token: Configured' : 'Page: Configure below';
+      metaBadge.className = 'badge ' + (hasMeta ? 'ok' : 'gold');
+      igBadge.textContent = igId ? `✅ IG: ${igHandle} (${igId})` : `IG: ${igHandle}`;
+      igBadge.className = 'badge ' + (igId ? 'ok' : 'gold');
+      document.getElementById('headerTitle').textContent = `${getAgentName()} (${igHandle}) — Multi-Key Anti-Wall Load Balancer`;
+    }
+
+    // Sliding 60s usage tracker per key slot (0..6) so no key ever reaches 5 calls/min
+    const keyUsageTimestamps = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+
+    function getKeyLoad60s(idx) {
+      const now = Date.now();
+      keyUsageTimestamps[idx] = (keyUsageTimestamps[idx] || []).filter(t => now - t < 60000);
+      return keyUsageTimestamps[idx].length;
+    }
+
+    function recordKeyCall(idx) {
+      const now = Date.now();
+      keyUsageTimestamps[idx] = (keyUsageTimestamps[idx] || []).filter(t => now - t < 60000);
+      keyUsageTimestamps[idx].push(now);
+      renderKeyLoadBar();
+    }
+
+    function renderKeyLoadBar() {
+      const bar = document.getElementById('keyLoadBar');
+      let html = '';
+      for (let i = 0; i < 7; i++) {
+        const load = getKeyLoad60s(i);
+        const color = load === 0 ? '#6ee7b7' : load < 3 ? '#fde68a' : '#fca5a5';
+        html += `<span class="badge key-pill" style="color:${color};">🔑 Key #${i + 1}: ${load}/4 msgs (last 60s)</span>`;
+      }
+      bar.innerHTML = html;
+    }
+
+    setInterval(renderKeyLoadBar, 3000);
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function saveConfig() {
+      state.metaToken = document.getElementById('metaTokenInput').value.trim();
+      state.igBusinessId = document.getElementById('igBusinessIdInput').value.trim();
+      state.igUsername = document.getElementById('igUsernameInput').value.trim().replace(/^@/, '');
+      state.ownerName = document.getElementById('ownerNameInput').value.trim() || 'Owner';
+      state.agentName = document.getElementById('agentNameInput').value.trim() || 'Aviday';
+      state.vipName = document.getElementById('vipNameInput').value.trim() || 'VIP';
+      for (let i = 0; i < 7; i++) {
+        state.keys[i] = document.getElementById('key' + (i + 1)).value.trim();
+      }
+      state.admin1Username = document.getElementById('admin1Username').value.trim().replace(/^@/, '').toLowerCase();
+      state.admin2Username = document.getElementById('admin2Username').value.trim().replace(/^@/, '').toLowerCase();
+      state.lomlUsername = document.getElementById('lomlUsername').value.trim().replace(/^@/, '').toLowerCase();
+      saveState();
+      updateBadges();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('metaTokenInput').value = state.metaToken || '';
+      document.getElementById('igBusinessIdInput').value = state.igBusinessId || '';
+      document.getElementById('igUsernameInput').value = state.igUsername || '';
+      document.getElementById('ownerNameInput').value = state.ownerName || 'Owner';
+      document.getElementById('agentNameInput').value = state.agentName || 'Aviday';
+      document.getElementById('vipNameInput').value = state.vipName || 'VIP';
+      for (let i = 0; i < 7; i++) {
+        document.getElementById('key' + (i + 1)).value = state.keys[i] || '';
+      }
+      document.getElementById('admin1Username').value = state.admin1Username || '';
+      document.getElementById('admin2Username').value = state.admin2Username || '';
+      document.getElementById('lomlUsername').value = state.lomlUsername || '';
+      updateBadges();
+      renderKeyLoadBar();
+    });
+
+    function logBubble(type, tag, text) {
+      const log = document.getElementById('chatLog');
+      log.innerHTML += `<div class="bubble ${type}"><div class="role-tag">${tag}</div>${text}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function safeParseJson(rawText) {
+      if (!rawText) return { reply: 'heyy! wsp?' };
+      const cleaned = String(rawText)
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
+      try {
+        return JSON.parse(cleaned);
+      } catch {
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) {
+          try { return JSON.parse(match[0]); } catch {}
+        }
+        return { reply: cleaned };
+      }
+    }
+
+    function getStatusSummary() {
+      const owner = getOwnerName();
+      if (state.statusMode !== 'online' && state.availableAt) {
+        const rem = state.availableAt - Date.now();
+        if (rem <= 0) {
+          state.statusMode = 'online';
+          state.statusMessage = 'Online and available';
+          state.availableAt = null;
+          saveState();
+          return `${owner} is awake and online right now.`;
+        }
+        const mins = Math.ceil(rem / 60000);
+        const hrs = Math.floor(mins / 60);
+        const m = mins % 60;
+        const timeStr = hrs > 0 ? `about ${hrs} hour${hrs > 1 ? 's' : ''}${m > 10 ? ` and ${m} mins` : ''}` : `about ${m} minutes`;
+        return `${owner} is currently ${state.statusMessage} (${state.statusMode}) and will be back online in ${timeStr}.`;
+      }
+      return `${owner} is online/around right now.`;
+    }
+
+    async function callAI(sysPrompt, history, isVipLoml = false) {
+      const validSlots = [];
+      for (let i = 0; i < 7; i++) {
+        const k = (state.keys[i] || '').trim();
+        if (k) validSlots.push({ idx: i, slotNum: i + 1, key: k });
+      }
+
+      const totalKeys = validSlots.length;
+      if (totalKeys === 0) {
+        throw new Error('No Gemini API keys configured. Paste at least 1 key in Step 1.');
+      }
+      const baseStart = (state.roundRobinIdx = ((state.roundRobinIdx || 0) + 1) % totalKeys);
+      saveState();
+
+      const orderedSlots = Array.from({ length: totalKeys }, (_, offset) => validSlots[(baseStart + offset) % totalKeys])
+        .sort((a, b) => getKeyLoad60s(a.idx) - getKeyLoad60s(b.idx));
+
+      const modelsToTry = isVipLoml
+        ? ['gemini-2.5-flash', 'gemini-3.6-flash']
+        : ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+
+      let lastErr = '';
+
+      for (const model of modelsToTry) {
+        for (const slot of orderedSlots) {
+          recordKeyCall(slot.idx);
+
+          try {
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(slot.key)}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  systemInstruction: { parts: [{ text: sysPrompt }] },
+                  contents: history.map(m => ({
+                    role: m.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: m.content }]
+                  })),
+                  generationConfig: { temperature: 0.85, responseMimeType: 'application/json' }
+                })
+              }
+            );
+
+            if (res.ok) {
+              const data = await res.json();
+              const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              const parsed = safeParseJson(raw);
+              return { ...parsed, _slotNum: slot.slotNum, _model: model };
+            } else {
+              lastErr = `Key #${slot.slotNum} (${model}) HTTP ${res.status}`;
+            }
+          } catch (e) {
+            lastErr = e.message;
+          }
+        }
+      }
+
+      throw new Error(`All ${totalKeys} keys exhausted (${lastErr})`);
+    }
+
+    async function sendRealInstagramDM(recipientId, text) {
+      const token = getMetaToken();
+      const igId = getIgBusinessId();
+      if (!token || !igId) {
+        logBubble('alert', '⚠️ Meta Config Missing', 'Configure META_PAGE_ACCESS_TOKEN and IG_BUSINESS_ACCOUNT_ID in Step 0.');
+        return null;
+      }
+      let lastData = null;
+      for (const ep of ['me', igId]) {
+        const res = await fetch(
+          `https://graph.facebook.com/v21.0/${ep}/messages?access_token=${encodeURIComponent(token)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipient: { id: recipientId },
+              message: { text }
+            })
+          }
+        );
+        lastData = await res.json();
+        if (res.ok && !lastData.error) return lastData;
+      }
+      if (lastData?.error) {
+        logBubble('alert', '⚠️ Meta Send DM Error', `${lastData.error.message} (Code ${lastData.error.code})`);
+      }
+      return lastData;
+    }
+
+    async function processMessage({ senderId, senderUsername, text, isRealInstagram = false }) {
+      const owner = getOwnerName();
+      const agent = getAgentName();
+      const vip = getVipName();
+      const igHandle = getIgUsername();
+      const cleanUser = (senderUsername || senderId || '').replace(/^@/, '').toLowerCase();
+      const isLoml =
+        senderId === 'loml' ||
+        (state.lomlIgId && senderId === state.lomlIgId) ||
+        (state.lomlUsername && cleanUser && state.lomlUsername === cleanUser);
+      const isAdmin =
+        senderId === 'admin1' ||
+        senderId === 'admin2' ||
+        (state.admin1IgId && senderId === state.admin1IgId) ||
+        (state.admin2IgId && senderId === state.admin2IgId) ||
+        (state.admin1Username && cleanUser && state.admin1Username === cleanUser) ||
+        (state.admin2Username && cleanUser && state.admin2Username === cleanUser);
+
+      if (!state.chatHistories[senderId]) state.chatHistories[senderId] = [];
+      state.chatHistories[senderId].push({ role: 'user', content: text });
+      if (state.chatHistories[senderId].length > 16) {
+        state.chatHistories[senderId] = state.chatHistories[senderId].slice(-16);
+      }
+
+      const statusSummary = getStatusSummary();
+      const userMem = state.userMemories[senderId] || '';
+
+      // 1. TIER 1 VIP MODE
+      if (isLoml) {
+        if (Date.now() - (state.lastLomlAlertAt || 0) > 5 * 60 * 1000) {
+          state.lastLomlAlertAt = Date.now();
+          logBubble('alert', '🔔 Private Ping to Admins', `❤️ Your ${vip} just texted!`);
+          if (isRealInstagram) {
+            if (state.admin1IgId) await sendRealInstagramDM(state.admin1IgId, `❤️ Your ${vip} just texted!`);
+            if (state.admin2IgId && state.admin2IgId !== state.admin1IgId) {
+              await sendRealInstagramDM(state.admin2IgId, `❤️ Your ${vip} just texted!`);
+            }
+          }
+        }
+
+        const sysPrompt = `You are ${agent}, ${owner}'s personal AI assistant, and right now you are talking directly to ${vip} (Tier 1 VIP).
+1. Greet them warmly and prioritize their messages above all else.
+2. If they ask where ${owner} is, weave in their current status naturally: ${statusSummary}
+3. Memory of past chats: ${userMem}
+Respond strictly in JSON: {"reply": "...", "updated_memory": "..."}`;
+
+        const ai = await callAI(sysPrompt, state.chatHistories[senderId], true);
+        state.chatHistories[senderId].push({ role: 'assistant', content: ai.reply });
+        if (ai.updated_memory) state.userMemories[senderId] = ai.updated_memory;
+        saveState();
+
+        if (isRealInstagram) await sendRealInstagramDM(senderId, ai.reply);
+        logBubble('bot', `✨ ${agent} [Key #${ai._slotNum} • ${ai._model} ❤️ VIP] -> @${cleanUser}`, ai.reply);
+        return;
+      }
+
+      // 2. ADMIN CONTROL CENTER MODE
+      if (isAdmin) {
+        const sysPrompt = `You are ${agent}, talking directly to ${owner} (on their Admin account).
+Current status: ${statusSummary}
+Extra notes: ${state.extraNotes || 'None'}
+If ${owner} says they are going to sleep or will be offline/busy for X hours, return JSON:
+{"action": "set_status", "status_mode": "sleeping", "status_message": "sleeping", "duration_hours": 8, "reply": "Got it! Setting status to sleeping for 8 hours."}
+If they say they are awake/back online, return:
+{"action": "clear_status", "reply": "Welcome back, set your status back to online!"}
+If they tell you to remember a note/fact, return:
+{"action": "add_note", "note_to_add": "...", "reply": "Locked into memory!"}
+Otherwise chat naturally and return:
+{"action": "chat", "reply": "..."}`;
+
+        const cmd = await callAI(sysPrompt, state.chatHistories[senderId], false);
+        if (cmd.action === 'set_status') {
+          const hrs = Number(cmd.duration_hours) || 8;
+          state.statusMode = cmd.status_mode || 'sleeping';
+          state.statusMessage = cmd.status_message || 'sleeping';
+          state.availableAt = Date.now() + hrs * 3600000;
+        } else if (cmd.action === 'clear_status') {
+          state.statusMode = 'online';
+          state.statusMessage = 'Online and available';
+          state.availableAt = null;
+        } else if (cmd.action === 'add_note' && cmd.note_to_add) {
+          state.extraNotes = (state.extraNotes ? state.extraNotes + '\n' : '') + '- ' + cmd.note_to_add;
+        }
+        state.chatHistories[senderId].push({ role: 'assistant', content: cmd.reply });
+        saveState();
+
+        if (isRealInstagram) await sendRealInstagramDM(senderId, cmd.reply);
+        logBubble('bot', `✨ ${agent} [Key #${cmd._slotNum} • ${cmd._model}] -> 🛠️ ${owner} (${cleanUser})`, cmd.reply);
+        return;
+      }
+
+      // 3. PUBLIC MODE (Friends & Followers)
+      const sysPrompt = `You are ${agent}, ${owner}'s personal assistant on Instagram (@${igHandle}).
+HOW YOU TALK:
+- Warm, witty, conversational, and a genuine friend to ${owner}'s friends.
+- Text naturally like a real person on Instagram DMs — NEVER sound like a stiff robot!
+
+${owner.toUpperCase()}'S CURRENT LIVE STATUS (translate into natural casual speech if asked):
+${statusSummary}
+
+EXTRA NOTES FROM ${owner.toUpperCase()}:
+${state.extraNotes || 'None'}
+
+PERMANENT MEMORY ABOUT THIS FRIEND (@${cleanUser}):
+${userMem || 'First time chatting with this friend! Be friendly and get to know them.'}
+
+PRIVACY RULE:
+- Never reveal private handles or personal details about ${owner}'s VIP contacts (${vip}).
+
+Respond strictly in JSON: {"reply": "your casual human reply", "updated_memory": "facts remembered about this friend"}`;
+
+      const ai = await callAI(sysPrompt, state.chatHistories[senderId], false);
+      state.chatHistories[senderId].push({ role: 'assistant', content: ai.reply });
+      if (ai.updated_memory) state.userMemories[senderId] = ai.updated_memory;
+      saveState();
+
+      if (isRealInstagram) await sendRealInstagramDM(senderId, ai.reply);
+      logBubble('bot', `✨ ${agent} [Key #${ai._slotNum} • ${ai._model}] -> 🌍 @${cleanUser}`, ai.reply);
+    }
+
+    async function sendTestDM() {
+      const role = document.getElementById('simRole').value;
+      const text = document.getElementById('simText').value.trim();
+      if (!text) return;
+      document.getElementById('simText').value = '';
+      logBubble('user', `DM from @${role}`, text);
+      try {
+        await processMessage({ senderId: role, senderUsername: role, text, isRealInstagram: false });
+      } catch (err) {
+        logBubble('bot', '⚠️ Error', err.message);
+      }
+    }
+
+    async function fireSimultaneous5FriendsTest() {
+      const owner = getOwnerName();
+      const agent = getAgentName();
+      const batch = [
+        { id: 'friend_1', user: 'friend_1', text: `yo ${agent} where is ${owner}? why is he offline rn` },
+        { id: 'friend_2', user: 'friend_2', text: `heyy ${agent}!! how are you doing today` },
+        { id: 'friend_3', user: 'friend_3', text: `hey tell me what ${owner} is up to lately` },
+        { id: 'friend_4', user: 'friend_4', text: `hey ${agent} remember me? im a friend from college, tell ${owner} i said hi` },
+        { id: 'friend_5', user: 'friend_5', text: `${agent} im bored talk to me lol` }
+      ];
+
+      for (const item of batch) {
+        logBubble('user', `⚡ Simultaneous DM from @${item.user}`, item.text);
+      }
+
+      await Promise.allSettled(
+        batch.map(item =>
+          processMessage({
+            senderId: item.id,
+            senderUsername: item.user,
+            text: item.text,
+            isRealInstagram: false
+          })
+        )
+      );
+    }
+
+    async function fetchInstagramConversations() {
+      const token = getMetaToken();
+      const igId = getIgBusinessId();
+      if (!token || !igId) {
+        return { error: { code: 'CONFIG', message: 'Configure META_PAGE_ACCESS_TOKEN and IG_BUSINESS_ACCOUNT_ID in Step 0 first.' } };
+      }
+      let lastJson = null;
+      for (const ep of ['me', igId]) {
+        const res = await fetch(
+          `https://graph.facebook.com/v21.0/${ep}/conversations?platform=instagram&fields=participants,messages.limit(2){id,from,message,created_time}&access_token=${encodeURIComponent(token)}`
+        );
+        lastJson = await res.json();
+        if (!lastJson.error && lastJson.data) return lastJson;
+      }
+      return lastJson;
+    }
+
+    async function scanInstagramInbox() {
+      const box = document.getElementById('inboxList');
+      const igId = getIgBusinessId();
+      const igHandle = getIgUsername();
+      box.innerHTML = `<p>⏳ Scanning @${igHandle} Instagram DM threads...</p>`;
+      try {
+        const data = await fetchInstagramConversations();
+        if (data.error) {
+          box.innerHTML = `<div class="result-box" style="color:#fca5a5;">❌ Meta API Error (#${data.error.code}): ${data.error.message}</div>`;
+          logBubble('alert', '⚠️ Meta Inbox Error', data.error.message);
+          return;
+        }
+        const convos = data.data || [];
+        if (convos.length === 0) {
+          box.innerHTML = `<p style="color:#fde68a;">⚠️ Meta returned 0 conversations. Make sure:<br>1. On the <strong>@${igHandle}</strong> Instagram app: go to <strong>Settings and activity ➔ Messages and story replies ➔ Message controls ➔ Connected tools</strong> and turn ON <strong>"Allow access to messages"</strong>.<br>2. In Graph API Explorer, your token has <code>instagram_manage_messages</code> and <code>pages_messaging</code> permissions.</p>`;
+          return;
+        }
+
+        let html = '';
+        for (const c of convos.slice(0, 8)) {
+          const participants = c.participants?.data || [];
+          const other = participants.find(p => p.id !== igId && p.username !== igHandle) || participants[0];
+          if (!other) continue;
+          const lastMsg = c.messages?.data?.[0]?.message || '(media/attachment)';
+          html += `
+            <div class="user-row">
+              <div>
+                <strong>@${other.username || other.name || 'user'}</strong>
+                <span style="font-size:11px;color:#94a3b8;">(ID: ${other.id})</span>
+                <div style="font-size:12px;color:#94a3b8;">Last DM: "${lastMsg.slice(0, 45)}"</div>
+              </div>
+              <div>
+                <button class="small" onclick="assignRole('admin1', '${other.username || ''}', '${other.id}')">🛠️ Admin 1</button>
+                <button class="small" onclick="assignRole('admin2', '${other.username || ''}', '${other.id}')">🛠️ Admin 2</button>
+                <button class="small green" onclick="assignRole('loml', '${other.username || ''}', '${other.id}')">❤️ VIP</button>
+              </div>
+            </div>
+          `;
+        }
+        box.innerHTML = html;
+      } catch (err) {
+        box.innerHTML = `<div class="result-box">❌ Error: ${err.message}</div>`;
+      }
+    }
+
+    function assignRole(role, username, id) {
+      if (role === 'admin1') {
+        state.admin1Username = (username || id).toLowerCase();
+        state.admin1IgId = id;
+        document.getElementById('admin1Username').value = username || id;
+      } else if (role === 'admin2') {
+        state.admin2Username = (username || id).toLowerCase();
+        state.admin2IgId = id;
+        document.getElementById('admin2Username').value = username || id;
+      } else {
+        state.lomlUsername = (username || id).toLowerCase();
+        state.lomlIgId = id;
+        document.getElementById('lomlUsername').value = username || id;
+      }
+      saveState();
+    }
+
+    let liveInterval = null;
+    let lastLoggedPollError = '';
+    let isInitializedPoll = false;
+
+    async function pollInstagramDMs() {
+      const igId = getIgBusinessId();
+      const igHandle = getIgUsername();
+      try {
+        const data = await fetchInstagramConversations();
+        if (data?.error) {
+          if (lastLoggedPollError !== data.error.message) {
+            lastLoggedPollError = data.error.message;
+            logBubble('alert', `⚠️ Meta Inbox Poll Error (#${data.error.code})`, data.error.message);
+          }
+          return;
+        }
+        if (!data?.data) return;
+
+        const parallelTasks = [];
+
+        for (const c of data.data) {
+          const lastMsg = c.messages?.data?.[0];
+          if (!lastMsg || !lastMsg.id || !lastMsg.message) continue;
+
+          if (lastMsg.from?.id === igId || lastMsg.from?.username === igHandle) continue;
+          if (state.repliedMessageIds[lastMsg.id]) continue;
+
+          const msgAgeMs = lastMsg.created_time ? Date.now() - new Date(lastMsg.created_time).getTime() : 0;
+          if (msgAgeMs > 30 * 60 * 1000) {
+            state.repliedMessageIds[lastMsg.id] = true;
+            continue;
+          }
+
+          state.repliedMessageIds[lastMsg.id] = true;
+          saveState();
+
+          const senderId = lastMsg.from?.id;
+          const senderUsername = lastMsg.from?.username || '';
+          logBubble('user', `📩 Real IG DM from @${senderUsername} (${senderId})`, lastMsg.message);
+
+          parallelTasks.push(
+            processMessage({
+              senderId,
+              senderUsername,
+              text: lastMsg.message,
+              isRealInstagram: true
+            })
+          );
+        }
+
+        saveState();
+
+        if (parallelTasks.length > 0) {
+          await Promise.allSettled(parallelTasks);
+        }
+      } catch (err) {
+        console.warn('Poll error:', err);
+      }
+    }
+
+    async function toggleLiveBot() {
+      const btn = document.getElementById('toggleLiveBtn');
+      const badge = document.getElementById('liveBadge');
+      const statusText = document.getElementById('liveStatusText');
+      const igHandle = getIgUsername();
+      const agent = getAgentName();
+
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        liveInterval = null;
+        btn.textContent = '🟢 Start Live Instagram DM Auto-Reply';
+        btn.className = 'green';
+        badge.textContent = '⏸️ Auto-Reply: Paused';
+        badge.className = 'badge';
+        statusText.textContent = '';
+        return;
+      }
+
+      isInitializedPoll = false;
+      btn.textContent = '🛑 Stop Live Auto-Reply';
+      btn.className = 'red';
+      badge.textContent = `🔴 LIVE ON @${igHandle}`;
+      badge.className = 'badge live';
+      statusText.textContent = `⚡ ${agent} is actively watching @${igHandle} DMs and spreading calls across your keys!`;
+
+      await pollInstagramDMs();
+      liveInterval = setInterval(pollInstagramDMs, 3500);
+    }
+  </script>
+</body>
+</html>

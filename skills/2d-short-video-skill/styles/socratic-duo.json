@@ -1,0 +1,36 @@
+{
+  "id": "socratic-duo",
+  "name": "Socratic Duo (Sage vs. Skeptic Dialogue)",
+  "inspiration": ["Philosophy Vibe", "3-Minute Philosophy"],
+  "palette": {
+    "bg": "#F7F4EA",
+    "bgDark": "#18222F",
+    "ink": "#18222F",
+    "inkMuted": "#5D697A",
+    "accent": "#E07A5F",
+    "accentAlt": "#3D5A80",
+    "captionFill": "#FFFFFF",
+    "captionHighlight": "#FFD166",
+    "captionStroke": "#18222F"
+  },
+  "typography": {
+    "displayFont": "Inter",
+    "bodyFont": "Inter",
+    "captionWeight": 900,
+    "captionSize": 104,
+    "hookSize": 68,
+    "citationSize": 28
+  },
+  "motion": {
+    "wobbleAmplitude": 0.8,
+    "boilFps": 10,
+    "cutResetSec": 1.8,
+    "strokeWidth": 5.0,
+    "negativeSpaceMin": 0.5
+  },
+  "audio": {
+    "droneRootHz": 146.83,
+    "chordStyle": "curious-pluck",
+    "preferredVoices": ["am_puck", "af_bella", "en-US-GuyNeural"]
+  }
+}

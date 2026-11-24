@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Environment & API keys (never commit Gemini keys or credentials)
+.env
+.env.*
+!.env.example
+.dev.vars
+*.local
+credentials.json
+*_credentials.json
+
+# Generated media, renders & working caches
+out/
+renders/
+review/
+tmp/
+dist/
+build/
+.remotion/
+*.mp4
+*.mov
+*.webm
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.png
+*.jpg
+*.jpeg
+!assets/**/*.png
+!docs/**/*.png
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/

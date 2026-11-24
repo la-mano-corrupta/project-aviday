@@ -1,0 +1,36 @@
+{
+  "id": "school-of-thought",
+  "name": "School of Thought (Warm Flat Vector Metaphor)",
+  "inspiration": ["The School of Life", "Advids One Metaphor"],
+  "palette": {
+    "bg": "#FAF5EB",
+    "bgDark": "#1D2939",
+    "ink": "#1D2939",
+    "inkMuted": "#667085",
+    "accent": "#D66853",
+    "accentAlt": "#6A8E7F",
+    "captionFill": "#FFFFFF",
+    "captionHighlight": "#F5B73B",
+    "captionStroke": "#1D2939"
+  },
+  "typography": {
+    "displayFont": "Inter",
+    "bodyFont": "Inter",
+    "captionWeight": 900,
+    "captionSize": 106,
+    "hookSize": 70,
+    "citationSize": 30
+  },
+  "motion": {
+    "wobbleAmplitude": 0.0,
+    "boilFps": 30,
+    "cutResetSec": 2.0,
+    "strokeWidth": 5.0,
+    "negativeSpaceMin": 0.55
+  },
+  "audio": {
+    "droneRootHz": 130.81,
+    "chordStyle": "major7-warm",
+    "preferredVoices": ["af_heart", "bm_george", "en-US-AndrewNeural"]
+  }
+}

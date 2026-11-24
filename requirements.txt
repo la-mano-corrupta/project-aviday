@@ -1,0 +1,7 @@
+numpy>=1.26.0
+scipy>=1.11.0
+edge-tts>=7.0.0
+# Optional local Kokoro-82M TTS and Faster-Whisper word-level alignment
+# (installed automatically into $FACELESS_HOME/venv by faceless-shorts-skill/faceless-shorts/scripts/setup.sh):
+# kokoro-onnx>=0.4.0
+# faster-whisper>=1.0.0

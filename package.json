@@ -1,0 +1,17 @@
+{
+  "name": "project-aviday",
+  "version": "1.0.0",
+  "description": "24/7 Personal Instagram AI Agent & Faceless Video Pipeline with Meta Graph API, YouTube Shorts, Multi-Provider TTS, and Dual Local/Linux CI Rendering",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init:local": "wrangler d1 execute insta-agent-db --local --file=./schema.sql",
+    "db:init:remote": "wrangler d1 execute insta-agent-db --remote --file=./schema.sql",
+    "test": "python3 -B -m unittest discover -s tests",
+    "check:js": "node --check cloudflare-worker-24-7.js src/index.js src/ai/router.js src/config/about_me.js src/meta/graphApi.js render_viral_thumbnail.mjs setup-server.mjs sync_ig_session.mjs make-permanent-token.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.99.0"
+  }
+}

@@ -1,0 +1,134 @@
+name: Faceless Reels Cloud Generator (On-Demand)
+
+on:
+  # Optional schedule (disabled by default for starter repo; uncomment to enable 6h runs):
+  # schedule:
+  #   - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      style:
+        description: 'Visual style'
+        type: choice
+        required: false
+        default: 'deep-dive'
+        options:
+          - auto
+          - deep-dive
+          - night-file
+          - stick-story
+          - tall-tale
+          - inside-out
+          - paper-atlas
+      topic:
+        description: 'Topic for the Faceless Reel (or "auto")'
+        type: string
+        required: false
+        default: 'What happens inside your brain when you pull an all-nighter?'
+      tts_provider:
+        description: 'Voice / TTS provider'
+        type: choice
+        required: false
+        default: 'default'
+        options:
+          - default
+          - kokoro
+          - gemini
+          - elevenlabs
+      voice:
+        description: 'Optional voice name or ID override'
+        type: string
+        required: false
+        default: ''
+      caption:
+        description: 'Custom Reel caption + hashtags (optional)'
+        type: string
+        required: false
+        default: ''
+      publish:
+        description: 'Publish to YouTube / Instagram (requires repo secrets; default false saves artifacts only)'
+        type: boolean
+        required: false
+        default: false
+      job_id:
+        description: 'Optional Cloudflare Worker Queue Job ID'
+        type: string
+        required: false
+        default: ''
+      existing_youtube_url:
+        description: 'Existing YouTube Short URL if already published'
+        type: string
+        required: false
+        default: ''
+
+jobs:
+  render-reel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SOFTWARE_GL: '1'
+      QS: '&res=0.6&aa=0&shadow=1024'
+      FPS: '24'
+      PROJECTS_DIR: ${{ github.workspace }}/output
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Chrome, FFmpeg, Mesa WebGL & Emoji Fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg mesa-vulkan-drivers libgl1-mesa-dri libegl1-mesa-dev fonts-noto-color-emoji wget
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+          rm -f google-chrome-stable_current_amd64.deb
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Render Faceless Reel
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          GEMINI_TTS_VOICE: ${{ secrets.GEMINI_TTS_VOICE }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
+          IG_BUSINESS_ACCOUNT_ID: ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          PUBLIC_VIDEO_BASE_URL: ${{ secrets.PUBLIC_VIDEO_BASE_URL }}
+          AVIDAY_WORKER_URL: ${{ secrets.AVIDAY_WORKER_URL }}
+        run: |
+          PUBLISH_FLAG="--no-upload"
+          if [ "${{ inputs.publish }}" = "true" ]; then
+            PUBLISH_FLAG="--publish"
+          fi
+          python3 -B generate_custom_topic_reel.py \
+            --style "${{ inputs.style || 'deep-dive' }}" \
+            --topic "${{ inputs.topic || 'auto' }}" \
+            --tts-provider "${{ inputs.tts_provider || 'default' }}" \
+            --voice "${{ inputs.voice || '' }}" \
+            --caption "${{ inputs.caption || '' }}" \
+            --job-id "${{ inputs.job_id || '' }}" \
+            --existing-youtube-url "${{ inputs.existing_youtube_url || '' }}" \
+            $PUBLISH_FLAG
+
+      - name: Upload Rendered Video & Cover Thumbnails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: faceless-reel-artifacts
+          path: |
+            output/**/renders/*.mp4
+            output/**/review/cover_*.jpg
+          if-no-files-found: warn

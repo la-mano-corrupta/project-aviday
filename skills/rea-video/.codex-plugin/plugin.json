@@ -1,0 +1,24 @@
+{
+  "name": "rea-video",
+  "version": "0.1.0",
+  "description": "逆向拆解视频：逐镜头判断实拍 / AI / 3D / 代码渲染 / 录屏，拆剪辑包装、声音和真实素材，给出复刻方案；抓魔术揭秘等特殊时刻。",
+  "author": { "name": "June" },
+  "homepage": "https://github.com/JuneYaooo/rea-video",
+  "repository": "https://github.com/JuneYaooo/rea-video",
+  "license": "Apache-2.0",
+  "keywords": ["video", "forensics", "ai-video", "remake", "magic", "highlights"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "rea-video",
+    "shortDescription": "拆解一条视频是怎么做出来的，给出复刻方案",
+    "longDescription": "逐镜头判断制作方式（实拍、AI 生成、3D、代码渲染、录屏等），拆字幕花字、声音和真实素材，给出复刻方案；魔术、剧情类视频还能抓出揭秘、反转、穿帮时刻，出逐帧图解和慢放。需要本机装好 rea-video CLI（bash scripts/install_skill.sh）。",
+    "developerName": "June",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/JuneYaooo/rea-video",
+    "defaultPrompt": [
+      "用 rea-video 拆解这条视频是怎么做的：~/Movies/ref.mp4",
+      "这条魔术视频是怎么变的？找出揭秘时刻：~/Movies/magic.mp4"
+    ]
+  }
+}

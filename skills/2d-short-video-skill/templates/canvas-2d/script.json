@@ -1,0 +1,57 @@
+{
+  "title": "Why Diogenes Told an Emperor to Move",
+  "style": "sisyphus-sketch",
+  "northStar": "Wealth and power cannot bribe someone whose peace is not for sale.",
+  "cover": {
+    "headline": "OWN NOTHING.",
+    "sublabel": "Diogenes of Sinope",
+    "accentColor": "#D95D39"
+  },
+  "voice": "am_puck",
+  "speed": 0.98,
+  "lead": 0.3,
+  "outro": 0.7,
+  "gap": 0.25,
+  "music": "bed",
+  "sources": [
+    "Plutarch, Life of Alexander 14 (reported confrontation at Corinth)",
+    "Diogenes Laertius, Lives of Eminent Philosophers VI.38 (Diogenes of Sinope)"
+  ],
+  "ttsPhonetics": {
+    "Diogenes": "dy-AW-juh-neez"
+  },
+  "lines": [
+    {
+      "text": "The world's richest conqueror offered him literally anything.",
+      "caps": "OFFERED *ANYTHING",
+      "hookText": "HE TOLD AN EMPEROR: MOVE",
+      "sfx": "thud"
+    },
+    {
+      "text": "Diogenes lived inside a giant clay jar in Corinth with zero money, zero status.",
+      "caps": "ZERO *MONEY | ZERO *STATUS",
+      "sfx": "ink"
+    },
+    {
+      "text": "Ancient writers record Alexander the Great standing right over him.",
+      "caps": "ALEXANDER *STOOD",
+      "sfx": "whoosh"
+    },
+    {
+      "text": "He asked softly, name any favor I can grant you right now.",
+      "caps": "NAME ONE *FAVOR",
+      "sfx": "pop"
+    },
+    {
+      "text": "Diogenes didn't even blink. [pause] Yes, stand a little out of my sunlight.",
+      "caps": "OUT OF MY *SUNLIGHT",
+      "sfx": "chime"
+    },
+    {
+      "text": "Power cannot bribe someone who already owns his peaceful morning, which is why",
+      "caps": "OWN YOUR *MORNING",
+      "sfx": "whoosh",
+      "gap": 0.15
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Prefer the local Kokoro/Whisper venv if present, else fall back to python3.
+VENV_PY="${FACELESS_HOME:-$HOME/.faceless-shorts}/venv/bin/python"
+if [ -x "$VENV_PY" ]; then
+  exec "$VENV_PY" "$@"
+fi
+exec python3 "$@"

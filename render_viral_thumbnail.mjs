@@ -1,0 +1,511 @@
+#!/usr/bin/env node
+/**
+ * Dedicated Viral Click-Hook Thumbnail Generator for Faceless Shorts / Reels
+ * Usage:
+ *   node render_viral_thumbnail.mjs <project_dir> <out_jpg> <style> <badge_text> <hook_line1> <hook_line2> [hero_time_sec]
+ *
+ * Renders the 3D/2D hero frame at `hero_time_sec` (default 3.2s) WITHOUT mid-sentence subtitles,
+ * then composites a high-CTR Reels/YouTube Shorts style viral hook cover inside the 1:1/4:5 center safe zone
+ * so it looks incredible on both the Instagram Profile Grid and the Reels Feed.
+ */
+import { spawn } from 'node:child_process';
+import http from 'node:http';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const [projDirArg, arg2, arg3, arg4, arg5, arg6, arg7] = process.argv.slice(2);
+if (!projDirArg) {
+  console.error('Usage: node render_viral_thumbnail.mjs <proj_dir> [<out_jpg> <style> <badge> <line1> <line2> [time_sec] | [time_sec]]');
+  process.exit(1);
+}
+
+const ROOT = path.resolve(projDirArg);
+const looksLikeOutPath = (v) => Boolean(v && (/\.(jpe?g|png|webp)$/i.test(v) || v.includes('/') || v.includes('\\')));
+let inferredStyle = 'deep-dive';
+let inferredTitle = '';
+try {
+  const sj = JSON.parse(fs.readFileSync(path.join(ROOT, 'script.json'), 'utf8'));
+  if (sj.style) inferredStyle = sj.style;
+  if (sj.title) inferredTitle = String(sj.title);
+} catch {}
+
+let outJpgPath;
+let style = inferredStyle;
+let badgeText = 'WHAT HAPPENS IF...';
+let hookLine1 = 'HOLD YOUR BREATH';
+let hookLine2 = 'TOO LONG?!';
+let HERO_TIME = 3.2;
+
+if (looksLikeOutPath(arg2)) {
+  outJpgPath = path.resolve(arg2);
+  style = arg3 || inferredStyle;
+  badgeText = arg4 || badgeText;
+  hookLine1 = arg5 || hookLine1;
+  hookLine2 = arg6 || hookLine2;
+  HERO_TIME = Number.isFinite(parseFloat(arg7)) ? parseFloat(arg7) : 3.2;
+} else {
+  outJpgPath = path.join(ROOT, 'review', 'cover_hook.jpg');
+  HERO_TIME = Number.isFinite(parseFloat(arg2)) ? parseFloat(arg2) : 3.2;
+  if (inferredTitle) {
+    const words = inferredTitle.toUpperCase().split(/\s+/).filter(Boolean);
+    const mid = Math.max(1, Math.ceil(words.length / 2));
+    hookLine1 = words.slice(0, mid).join(' ').slice(0, 24) || hookLine1;
+    hookLine2 = words.slice(mid).join(' ').slice(0, 24) || hookLine2;
+  }
+}
+const OUT_JPG = outJpgPath;
+
+const envChrome = (process.env.CHROME || '').trim();
+const CHROME = envChrome
+  ? (fs.existsSync(envChrome) ? envChrome : null)
+  : [
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Chromium.app/Contents/MacOS/Chromium',
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/snap/bin/chromium'
+    ].find((p) => p && fs.existsSync(p));
+if (envChrome && !CHROME) {
+  console.error(`Chrome not found at CHROME=${envChrome}`);
+  process.exit(1);
+}
+if (!CHROME) {
+  console.error('Chrome not found: install Google Chrome or set CHROME=/path/to/chrome');
+  process.exit(1);
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const MIME = {
+  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
+  '.otf': 'font/otf', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.wav': 'audio/wav', '.png': 'image/png', '.jpg': 'image/jpeg'
+};
+
+const FALLBACK_HTML = `<!doctype html><html><body style="margin:0;background:#090b10;">
+<canvas id="cv" width="1080" height="1920"></canvas>
+<script>
+window.OP = {
+  ready: true,
+  draw() {
+    const c = document.getElementById('cv').getContext('2d');
+    const g = c.createLinearGradient(0, 0, 0, 1920);
+    g.addColorStop(0, '#1b2336');
+    g.addColorStop(1, '#090b10');
+    c.fillStyle = g;
+    c.fillRect(0, 0, 1080, 1920);
+  }
+};
+</script></body></html>`;
+
+function serve(port = 0) {
+  return new Promise((res) => {
+    const srv = http.createServer((req, r) => {
+      const u = decodeURIComponent(req.url.split('?')[0]);
+      const rel = u === '/' ? 'index.html' : u;
+      const f = path.join(ROOT, rel);
+      if ((rel === 'index.html' || rel === '/index.html') && !fs.existsSync(f)) {
+        r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        r.end(FALLBACK_HTML);
+        return;
+      }
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) {
+        r.writeHead(404);
+        r.end();
+        return;
+      }
+      r.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      fs.createReadStream(f).pipe(r);
+    });
+    srv.listen(port, '127.0.0.1', () => res(srv));
+  });
+}
+
+const srv = await serve(0);
+const port = srv.address().port;
+const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'fs-thumb-'));
+const swFlags = process.env.SOFTWARE_GL
+  ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl']
+  : [];
+const chrome = spawn(
+  CHROME,
+  [
+    '--headless=new',
+    '--remote-debugging-port=0',
+    `--user-data-dir=${prof}`,
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--hide-scrollbars',
+    '--window-size=1080,1920',
+    '--ignore-gpu-blocklist',
+    '--enable-unsafe-swiftshader',
+    ...swFlags,
+    '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+    'about:blank'
+  ],
+  { stdio: 'ignore' }
+);
+
+let ws = null;
+let cleanedUp = false;
+const cleanup = () => {
+  if (cleanedUp) return;
+  cleanedUp = true;
+  try { ws?.close(); } catch {}
+  try { chrome.kill('SIGKILL'); } catch {}
+  try { srv.close(); } catch {}
+  try { fs.rmSync(prof, { recursive: true, force: true }); } catch {}
+};
+const onSig = (sig) => {
+  cleanup();
+  process.exit(sig === 'SIGINT' ? 130 : 143);
+};
+process.once('SIGINT', onSig);
+process.once('SIGTERM', onSig);
+process.once('exit', cleanup);
+
+try {
+  let dbg;
+  for (let i = 0; i < 200 && !dbg; i++) {
+    try {
+      dbg = fs.readFileSync(path.join(prof, 'DevToolsActivePort'), 'utf8').split('\n')[0].trim();
+    } catch {
+      await sleep(100);
+    }
+  }
+  if (!dbg) {
+    throw new Error('Chrome did not start');
+  }
+  const qs = process.env.QS || (process.env.SOFTWARE_GL ? '&res=0.6&aa=0&shadow=1024' : '');
+  const r = await fetch(`http://127.0.0.1:${dbg}/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/index.html?capture=1${qs}`)}`, { method: 'PUT' });
+  const target = await r.json();
+  ws = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
+  let id = 0;
+  const pend = new Map();
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.id && pend.has(m.id)) {
+      const p = pend.get(m.id);
+      pend.delete(m.id);
+      m.error ? p.rej(new Error(m.error.message)) : p.res(m.result);
+    }
+  };
+  const send = (method, params = {}) => new Promise((res, rej) => {
+    const i = ++id;
+    pend.set(i, { res, rej });
+    ws.send(JSON.stringify({ id: i, method, params }));
+  });
+  const ev = async (expr) => {
+    const x = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
+    if (x.exceptionDetails) throw new Error(x.exceptionDetails.exception?.description || x.exceptionDetails.text);
+    return x.result.value;
+  };
+  await send('Runtime.enable');
+  for (let i = 0; i < 600; i++) {
+    const st = await ev('window.OP ? OP.ready : false').catch(() => false);
+    if (st === true) break;
+    await sleep(100);
+  }
+
+  const expr = `(() => {
+    const style = ${JSON.stringify(style)};
+    const badge = ${JSON.stringify(badgeText.toUpperCase())};
+    const line1 = ${JSON.stringify(hookLine1.toUpperCase())};
+    const line2 = ${JSON.stringify(hookLine2.toUpperCase())};
+    const t = ${HERO_TIME};
+
+    // Draw hero frame at time t
+    const cv = document.getElementById('cv');
+    const gl = document.getElementById('gl');
+    const ctx = cv.getContext('2d');
+
+    if (gl && gl.width > 0) {
+      OP.draw(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(gl, 0, 0, 1080, 1920);
+    } else if (typeof OP.drawScene === 'function') {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      OP.drawScene(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+    } else if (Array.isArray(OP._shots) && OP._shots.length > 0) {
+      // 2D style (e.g. stick-story): render the shot directly without drawCaption(t)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 1080, 1920);
+      const S = OP._shots;
+      let i = S.length - 1;
+      while (i > 0 && S[i].at > t) i--;
+      const sh = S[i];
+      const dur = OP.duration ? OP.duration() : 35;
+      const end = i < S.length - 1 ? S[i + 1].at : dur;
+      const d = Math.max(0.01, end - sh.at);
+      const lt = Math.max(0, t - sh.at);
+      ctx.save();
+      sh.draw(lt, d, t);
+      ctx.restore();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+    } else {
+      OP.draw(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // 1. Cinematic dark gradient overlays (top, bottom, and subtle radial vignette for text legibility)
+    const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+    grad.addColorStop(0.0, 'rgba(0,0,0,0.65)');
+    grad.addColorStop(0.35, 'rgba(0,0,0,0.12)');
+    grad.addColorStop(0.62, 'rgba(0,0,0,0.35)');
+    grad.addColorStop(0.82, 'rgba(0,0,0,0.82)');
+    grad.addColorStop(1.0, 'rgba(0,0,0,0.92)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1920);
+
+    // Theme palette per category
+    const palettes = {
+      'deep-dive':   { accent: '#FFD43B', badgeBg: '#E03131', badgeFg: '#FFFFFF', boxText: '#0B0C10' },
+      'night-file':  { accent: '#FF3B3B', badgeBg: '#1A1B1E', badgeFg: '#FF6B6B', boxText: '#FFFFFF' },
+      'stick-story': { accent: '#FF922B', badgeBg: '#D9480F', badgeFg: '#FFFFFF', boxText: '#FFFFFF' },
+      'tall-tale':   { accent: '#51CF66', badgeBg: '#2B8A3E', badgeFg: '#FFFFFF', boxText: '#0B0C10' },
+      'paper-atlas': { accent: '#FFD43B', badgeBg: '#A8322D', badgeFg: '#F4EFE4', boxText: '#0B0C10' },
+      'inside-out':  { accent: '#FFD43B', badgeBg: '#D62839', badgeFg: '#FFFFFF', boxText: '#0B0C10' }
+    };
+    const pal = palettes[style] || palettes['deep-dive'];
+
+    // Helper for rounded rect
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // 2. Top Category Pill Badge (Placed at Y=500 so it stays inside the 1:1 & 4:5 Instagram Profile Grid crop!)
+    ctx.font = '900 38px Inter, Impact, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const bw = Math.min(920, ctx.measureText(badge).width + 88);
+    const bh = 76;
+    const bx = (1080 - bw) / 2;
+    const by = 470;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.75)';
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 8;
+    roundRect(bx, by, bw, bh, 38);
+    ctx.fillStyle = pal.badgeBg;
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = pal.accent;
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = pal.badgeFg;
+    ctx.fillText(badge, 540, by + bh / 2 + 2);
+
+    // 3. Auto-fit Hook Line 1 (White Ultra-Bold with Heavy Black Stroke at Y=1180, inside Profile Grid Safe Zone!)
+    function fitFontSize(text, maxW, startPx) {
+      let sz = startPx;
+      while (sz > 54) {
+        ctx.font = '900 ' + sz + 'px Inter, Impact, sans-serif';
+        if (ctx.measureText(text).width <= maxW) break;
+        sz -= 4;
+      }
+      return sz;
+    }
+
+    const sz1 = fitFontSize(line1, 960, 108);
+    ctx.font = '900 ' + sz1 + 'px Inter, Impact, sans-serif';
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur = 28;
+    ctx.shadowOffsetY = 10;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 22;
+    ctx.strokeStyle = '#000000';
+    ctx.strokeText(line1, 540, 1175);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(line1, 540, 1175);
+    ctx.restore();
+
+    // 4. Hook Line 2 inside High-Contrast Tilted Highlight Box (at Y=1315, inside Profile Grid Safe Zone!)
+    const sz2 = fitFontSize(line2, 900, 112);
+    ctx.font = '900 ' + sz2 + 'px Inter, Impact, sans-serif';
+    const tw2 = ctx.measureText(line2).width;
+    const padX = 48;
+    const boxW = Math.min(980, tw2 + padX * 2);
+    const boxH = sz2 + 44;
+    const boxY = 1320;
+
+    ctx.save();
+    ctx.translate(540, boxY);
+    ctx.rotate(-0.022);
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetY = 12;
+    roundRect(-boxW / 2, -boxH / 2, boxW, boxH, 22);
+    ctx.fillStyle = pal.accent;
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#000000';
+    ctx.stroke();
+
+    ctx.shadowColor = 'transparent';
+    if (pal.boxText === '#FFFFFF') {
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#000000';
+      ctx.strokeText(line2, 0, 4);
+    }
+    ctx.fillStyle = pal.boxText;
+    ctx.fillText(line2, 0, 4);
+    ctx.restore();
+
+    return {
+      igDataUrl: cv.toDataURL('image/jpeg', 0.95),
+      ytDataUrl: (() => {
+        // Re-draw clean hero frame for the dedicated YouTube Shorts 9:16 Thumbnail (cover_youtube.jpg)
+        if (gl && gl.width > 0) {
+          OP.draw(t);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.drawImage(gl, 0, 0, 1080, 1920);
+        } else if (typeof OP.drawScene === 'function') {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      OP.drawScene(t);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+    } else if (Array.isArray(OP._shots) && OP._shots.length > 0) {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, 1080, 1920);
+          const S = OP._shots;
+          let i = S.length - 1;
+          while (i > 0 && S[i].at > t) i--;
+          const sh = S[i];
+          const dur = OP.duration ? OP.duration() : 35;
+          const end = i < S.length - 1 ? S[i + 1].at : dur;
+          const d = Math.max(0.01, end - sh.at);
+          const lt = Math.max(0, t - sh.at);
+          ctx.save();
+          sh.draw(lt, d, t);
+          ctx.restore();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1;
+        } else {
+          OP.draw(t);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+        // YouTube Shorts Specific Layout:
+        // - Top Header Banner (Y=110..520) holds the Category Pill + 2-Line Giant Hook
+        // - Center 3D Subject (Y=540..1460) is 100% CLEAN & UNOBSTRUCTED
+        // - Bottom 25% (Y=1460..1920) is kept clean for YouTube Shorts UI Title & Views overlay!
+        const ytGrad = ctx.createLinearGradient(0, 0, 0, 1920);
+        ytGrad.addColorStop(0.0, 'rgba(0,0,0,0.95)');
+        ytGrad.addColorStop(0.23, 'rgba(0,0,0,0.82)');
+        ytGrad.addColorStop(0.35, 'rgba(0,0,0,0.0)');
+        ytGrad.addColorStop(0.80, 'rgba(0,0,0,0.32)');
+        ytGrad.addColorStop(1.0, 'rgba(0,0,0,0.84)');
+        ctx.fillStyle = ytGrad;
+        ctx.fillRect(0, 0, 1080, 1920);
+
+        // Top Category Pill Badge at Y=115
+        ctx.font = '900 38px Inter, Impact, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const ybw = Math.min(920, ctx.measureText(badge).width + 88);
+        const ybh = 74;
+        const ybx = (1080 - ybw) / 2;
+        const yby = 110;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.85)';
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
+        roundRect(ybx, yby, ybw, ybh, 37);
+        ctx.fillStyle = pal.badgeBg;
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = pal.accent;
+        ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = pal.badgeFg;
+        ctx.fillText(badge, 540, yby + ybh / 2 + 2);
+
+        // Top Giant Hook Line 1 at Y=295
+        const ysz1 = fitFontSize(line1, 960, 110);
+        ctx.font = '900 ' + ysz1 + 'px Inter, Impact, sans-serif';
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.95)';
+        ctx.shadowBlur = 28;
+        ctx.shadowOffsetY = 10;
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 22;
+        ctx.strokeStyle = '#000000';
+        ctx.strokeText(line1, 540, 295);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(line1, 540, 295);
+        ctx.restore();
+
+        // Top Giant Hook Line 2 in Category Accent Box at Y=435
+        const ysz2 = fitFontSize(line2, 900, 112);
+        ctx.font = '900 ' + ysz2 + 'px Inter, Impact, sans-serif';
+        const ytw2 = ctx.measureText(line2).width;
+        const yboxW = Math.min(980, ytw2 + 88);
+        const yboxH = ysz2 + 42;
+        const yboxY = 435;
+        ctx.save();
+        ctx.translate(540, yboxY);
+        ctx.rotate(-0.018);
+        ctx.shadowColor = 'rgba(0,0,0,0.88)';
+        ctx.shadowBlur = 28;
+        ctx.shadowOffsetY = 10;
+        roundRect(-yboxW / 2, -yboxH / 2, yboxW, yboxH, 20);
+        ctx.fillStyle = pal.accent;
+        ctx.fill();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#000000';
+        ctx.stroke();
+        ctx.shadowColor = 'transparent';
+        if (pal.boxText === '#FFFFFF') {
+          ctx.lineJoin = 'round';
+          ctx.lineWidth = 14;
+          ctx.strokeStyle = '#000000';
+          ctx.strokeText(line2, 0, 4);
+        }
+        ctx.fillStyle = pal.boxText;
+        ctx.fillText(line2, 0, 4);
+        ctx.restore();
+
+        return cv.toDataURL('image/jpeg', 0.93);
+      })()
+    };
+  })()`;
+
+  const { igDataUrl, ytDataUrl } = await ev(expr);
+  const jpgBuf = Buffer.from(igDataUrl.slice(igDataUrl.indexOf(',') + 1), 'base64');
+  fs.mkdirSync(path.dirname(OUT_JPG), { recursive: true });
+  fs.writeFileSync(OUT_JPG, jpgBuf);
+  console.log(`✅ Instagram Viral thumbnail saved: ${OUT_JPG} (${(jpgBuf.length / 1024).toFixed(1)} KB)`);
+
+  const ytOutJpg = path.join(path.dirname(OUT_JPG), 'cover_youtube.jpg');
+  const ytBuf = Buffer.from(ytDataUrl.slice(ytDataUrl.indexOf(',') + 1), 'base64');
+  fs.writeFileSync(ytOutJpg, ytBuf);
+  console.log(`✅ YouTube Shorts dedicated thumbnail saved: ${ytOutJpg} (${(ytBuf.length / 1024).toFixed(1)} KB)`);
+  ws.close();
+} finally {
+  process.off('SIGINT', onSig);
+  process.off('SIGTERM', onSig);
+  process.off('exit', cleanup);
+  cleanup();
+  setTimeout(() => {
+    try { fs.rmSync(prof, { recursive: true, force: true }); } catch {}
+  }, 300);
+}

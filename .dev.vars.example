@@ -1,0 +1,47 @@
+# ==============================================================================
+# Cloudflare Worker Local Secrets (.dev.vars.example)
+# Copy to .dev.vars for `npx wrangler dev` (never commit .dev.vars!).
+# For production, upload via `npx wrangler secret put <KEY>`.
+# ==============================================================================
+
+# 1. AI Providers
+GEMINI_API_KEY="YOUR_GOOGLE_AI_STUDIO_KEY"
+GEMINI_API_KEYS=""
+GROQ_API_KEY="YOUR_OPTIONAL_GROQ_KEY"
+
+# 2. Meta Graph API Credentials (from developers.facebook.com)
+META_PAGE_ACCESS_TOKEN="YOUR_LONG_LIVED_PAGE_ACCESS_TOKEN"
+IG_BUSINESS_ACCOUNT_ID="YOUR_IG_PROFESSIONAL_ACCOUNT_ID"
+FB_PAGE_ID="YOUR_FACEBOOK_PAGE_ID"
+META_VERIFY_TOKEN="CHANGE_ME_VERIFY_TOKEN"
+
+# 3. Persona & 3-Tier Identity Router (IGSIDs / Usernames)
+OWNER_NAME="YOUR_NAME"
+AGENT_NAME="Aviday"
+VIP_NAME="YOUR_VIP_NAME"
+ADMIN_IG_ID="YOUR_ADMIN_1_IGSID"
+ADMIN_2_IG_ID=""
+LOML_IG_ID="YOUR_VIP_ACCOUNT_IGSID"
+ADMIN_1_USERNAME=""
+ADMIN_2_USERNAME=""
+LOML_USERNAME=""
+
+# 4. Optional YouTube OAuth2 (for /reels/youtube-token endpoint)
+YOUTUBE_CLIENT_ID=""
+YOUTUBE_CLIENT_SECRET=""
+YOUTUBE_REFRESH_TOKEN=""
+YOUTUBE_CHANNEL_ID=""
+YOUTUBE_CHANNEL_HANDLE=""
+YOUTUBE_CHANNEL_URL=""
+
+# 5. Optional GitHub Actions Dispatch (for remote cloud rendering)
+GITHUB_REPO=""
+GITHUB_TOKEN=""
+GITHUB_WORKFLOW="faceless-reels.yml"
+GITHUB_BRANCH="main"
+
+# 6. Optional Direct IG Web Session (only if running 24/7 Direct GraphQL poller)
+IG_USERNAME=""
+IG_PASSWORD=""
+IG_USER_PK=""
+IG_INTEROP_FBID=""

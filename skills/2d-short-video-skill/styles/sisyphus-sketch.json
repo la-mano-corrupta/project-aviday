@@ -1,0 +1,36 @@
+{
+  "id": "sisyphus-sketch",
+  "name": "Sisyphus Sketch (Raw Existential Notebook)",
+  "inspiration": ["Sisyphus 55", "After Skool"],
+  "palette": {
+    "bg": "#F4EFE6",
+    "bgDark": "#171614",
+    "ink": "#1B1A17",
+    "inkMuted": "#6B655B",
+    "accent": "#D95D39",
+    "accentAlt": "#E8AA42",
+    "captionFill": "#FFFFFF",
+    "captionHighlight": "#FFD166",
+    "captionStroke": "#1B1A17"
+  },
+  "typography": {
+    "displayFont": "Inter",
+    "bodyFont": "Georgia",
+    "captionWeight": 900,
+    "captionSize": 108,
+    "hookSize": 72,
+    "citationSize": 32
+  },
+  "motion": {
+    "wobbleAmplitude": 1.6,
+    "boilFps": 8,
+    "cutResetSec": 2.0,
+    "strokeWidth": 5.5,
+    "negativeSpaceMin": 0.55
+  },
+  "audio": {
+    "droneRootHz": 110,
+    "chordStyle": "minor-felt",
+    "preferredVoices": ["bm_fable", "am_michael", "en-US-AndrewNeural"]
+  }
+}
